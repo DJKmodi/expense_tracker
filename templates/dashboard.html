@@ -1,0 +1,173 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Expense Tracker{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Welcome, {{ user.first_name|default:user.username }} 👋</h1>
+        <p style="color: var(--text-muted); font-size: 0.95rem;">Here is your financial overview for today</p>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <a href="{% url 'expense_add' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add Expense
+        </a>
+        <a href="{% url 'income_add' %}" class="btn btn-success">
+            <i class="fas fa-arrow-down"></i> Add Income
+        </a>
+    </div>
+</div>
+
+<!-- Metric Cards Grid -->
+<div class="dashboard-grid">
+    <!-- Total Income -->
+    <div class="glass-card metric-card">
+        <div class="metric-icon income">
+            <i class="fas fa-wallet"></i>
+        </div>
+        <div class="metric-details">
+            <div class="label">Total Income</div>
+            <div class="value" style="color: var(--accent-success);">₹{{ total_income|floatformat:2 }}</div>
+        </div>
+    </div>
+
+    <!-- Total Expense -->
+    <div class="glass-card metric-card">
+        <div class="metric-icon expense">
+            <i class="fas fa-shopping-cart"></i>
+        </div>
+        <div class="metric-details">
+            <div class="label">Total Expense</div>
+            <div class="value" style="color: var(--accent-danger);">₹{{ total_expense|floatformat:2 }}</div>
+        </div>
+    </div>
+
+    <!-- Current Balance -->
+    <div class="glass-card metric-card">
+        <div class="metric-icon balance">
+            <i class="fas fa-piggy-bank"></i>
+        </div>
+        <div class="metric-details">
+            <div class="label">Current Balance</div>
+            <div class="value" style="color: {% if current_balance >= 0 %}var(--accent-primary){% else %}var(--accent-danger){% endif %};">
+                ₹{{ current_balance|floatformat:2 }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Today's Expense -->
+    <div class="glass-card metric-card">
+        <div class="metric-icon today">
+            <i class="fas fa-calendar-day"></i>
+        </div>
+        <div class="metric-details">
+            <div class="label">Today's Expense</div>
+            <div class="value">₹{{ todays_expense|floatformat:2 }}</div>
+        </div>
+    </div>
+
+    <!-- Monthly Expense -->
+    <div class="glass-card metric-card">
+        <div class="metric-icon balance" style="background: rgba(139, 92, 246, 0.15); color: #8b5cf6;">
+            <i class="fas fa-calendar-alt"></i>
+        </div>
+        <div class="metric-details">
+            <div class="label">Monthly Expense</div>
+            <div class="value">₹{{ monthly_expense|floatformat:2 }}</div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Section -->
+<div class="charts-grid">
+    <div class="glass-card">
+        <div class="chart-title">
+            <span><i class="fas fa-chart-line" style="color: var(--accent-primary); margin-right: 8px;"></i> Expense Trend</span>
+            <a href="{% url 'reports' %}" style="font-size: 0.85rem; color: var(--accent-primary); text-decoration: none;">View Full Report →</a>
+        </div>
+        <div style="position: relative; height: 260px;">
+            <canvas id="expenseLineChart"></canvas>
+        </div>
+    </div>
+
+    <div class="glass-card">
+        <div class="chart-title">
+            <span><i class="fas fa-chart-pie" style="color: var(--accent-warning); margin-right: 8px;"></i> By Category</span>
+        </div>
+        <div style="position: relative; height: 260px;">
+            <canvas id="categoryPieChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Transactions -->
+<div class="glass-card">
+    <div class="chart-title" style="margin-bottom: 1.25rem;">
+        <span><i class="fas fa-list" style="color: var(--accent-info); margin-right: 8px;"></i> Recent Transactions</span>
+        <a href="{% url 'expenses' %}" class="btn btn-secondary btn-sm">View All Expenses</a>
+    </div>
+
+    <div class="table-container">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>Title / Source</th>
+                    <th>Category</th>
+                    <th>Date</th>
+                    <th>Amount</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for tx in recent_transactions %}
+                <tr>
+                    <td>
+                        {% if tx.tx_type == 'expense' %}
+                            <span class="badge badge-expense"><i class="fas fa-arrow-up"></i> Expense</span>
+                        {% else %}
+                            <span class="badge badge-income"><i class="fas fa-arrow-down"></i> Income</span>
+                        {% endif %}
+                    </td>
+                    <td style="font-weight: 600;">
+                        {% if tx.tx_type == 'expense' %}
+                            <a href="{% url 'expense_detail' tx.id %}" style="color: #fff; text-decoration: none;">{{ tx.title }}</a>
+                        {% else %}
+                            {{ tx.source }}
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if tx.tx_type == 'expense' and tx.category %}
+                            <i class="{{ tx.category.icon|default:'fas fa-tag' }}" style="margin-right: 6px; color: var(--accent-info);"></i>
+                            {{ tx.category.name }}
+                        {% else %}
+                            <span style="color: var(--text-muted);">-</span>
+                        {% endif %}
+                    </td>
+                    <td style="color: var(--text-muted);">{{ tx.date|date:"M d, Y" }}</td>
+                    <td style="font-weight: 700; color: {% if tx.tx_type == 'expense' %}var(--accent-danger){% else %}var(--accent-success){% endif %};">
+                        {% if tx.tx_type == 'expense' %}-{% else %}+{% endif %}₹{{ tx.amount|floatformat:2 }}
+                    </td>
+
+                    <td>
+                        {% if tx.tx_type == 'expense' %}
+                            <a href="{% url 'expense_edit' tx.id %}" style="color: var(--text-muted); margin-right: 12px;" title="Edit"><i class="fas fa-edit"></i></a>
+                            <a href="{% url 'expense_delete' tx.id %}" style="color: var(--accent-danger);" title="Delete"><i class="fas fa-trash"></i></a>
+                        {% else %}
+                            <a href="{% url 'income_edit' tx.id %}" style="color: var(--text-muted); margin-right: 12px;" title="Edit"><i class="fas fa-edit"></i></a>
+                            <a href="{% url 'income_delete' tx.id %}" style="color: var(--accent-danger);" title="Delete"><i class="fas fa-trash"></i></a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                        No recent transactions found. Click "Add Expense" or "Add Income" to get started!
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

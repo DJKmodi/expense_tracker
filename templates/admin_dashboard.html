@@ -1,0 +1,191 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Panel - Expense Tracker{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">
+            <i class="fas fa-user-shield" style="color: var(--accent-warning); margin-right: 8px;"></i> Admin Control Panel
+        </h1>
+        <p style="color: var(--text-muted); font-size: 0.95rem;">Manage users, system categories, and view all transactions</p>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <a href="/admin/" target="_blank" class="btn btn-secondary">
+            <i class="fas fa-cog"></i> Open Django Admin
+        </a>
+    </div>
+</div>
+
+<!-- Admin Metrics Grid -->
+<div class="dashboard-grid">
+    <div class="glass-card metric-card">
+        <div class="metric-icon balance" style="background: rgba(245, 158, 11, 0.15); color: var(--accent-warning);">
+            <i class="fas fa-users"></i>
+        </div>
+        <div class="metric-details">
+            <div class="label">Registered Users</div>
+            <div class="value">{{ total_users }}</div>
+        </div>
+    </div>
+
+    <div class="glass-card metric-card">
+        <div class="metric-icon balance" style="background: rgba(6, 182, 212, 0.15); color: var(--accent-info);">
+            <i class="fas fa-tags"></i>
+        </div>
+        <div class="metric-details">
+            <div class="label">Categories</div>
+            <div class="value">{{ total_categories }}</div>
+        </div>
+    </div>
+
+    <div class="glass-card metric-card">
+        <div class="metric-icon expense">
+            <i class="fas fa-receipt"></i>
+        </div>
+        <div class="metric-details">
+            <div class="label">Total System Expenses</div>
+            <div class="value" style="color: var(--accent-danger);">₹{{ total_expenses|floatformat:2 }}</div>
+        </div>
+    </div>
+
+    <div class="glass-card metric-card">
+        <div class="metric-icon income">
+            <i class="fas fa-wallet"></i>
+        </div>
+        <div class="metric-details">
+            <div class="label">Total System Incomes</div>
+            <div class="value" style="color: var(--accent-success);">₹{{ total_incomes|floatformat:2 }}</div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Category Section & Categories Grid -->
+<div style="display: grid; grid-template-columns: 1fr 2fr; gap: 1.5rem; margin-bottom: 2rem;">
+    <!-- Add New Category Form Card -->
+    <div class="glass-card">
+        <h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 1.25rem;">
+            <i class="fas fa-folder-plus" style="color: var(--accent-success); margin-right: 8px;"></i> Add New Category
+        </h3>
+        <form method="post" action="{% url 'admin_category_add' %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <label class="form-label">Category Name</label>
+                {{ category_form.name }}
+            </div>
+            <div class="form-group">
+                <label class="form-label">FontAwesome Icon Class</label>
+                {{ category_form.icon }}
+                <span style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; display: block;">
+                    Example: <code>fas fa-plane</code>, <code>fas fa-book</code>, <code>fas fa-heartbeat</code>
+                </span>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; margin-top: 1rem;">
+                <i class="fas fa-plus"></i> Save Category
+            </button>
+        </form>
+    </div>
+
+    <!-- Active Categories List -->
+    <div class="glass-card">
+        <h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 1.25rem;">
+            <i class="fas fa-list-ul" style="color: var(--accent-info); margin-right: 8px;"></i> Active Categories ({{ categories_list|length }})
+        </h3>
+        <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+            {% for cat in categories_list %}
+            <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--glass-border); padding: 10px 16px; border-radius: var(--radius-md); display: flex; align-items: center; gap: 10px;">
+                <i class="{{ cat.icon|default:'fas fa-tag' }}" style="color: var(--accent-info); font-size: 1.2rem;"></i>
+                <span style="font-weight: 600;">{{ cat.name }}</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Registered Users Section -->
+<div class="glass-card" style="margin-bottom: 2rem;">
+    <h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 1.25rem;">
+        <i class="fas fa-users-cog" style="color: var(--accent-warning); margin-right: 8px;"></i> Registered Users
+    </h3>
+    <div class="table-container">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Email Address</th>
+                    <th>Date Joined</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in users_list %}
+                <tr>
+                    <td style="font-weight: 600; color: #fff;">{{ u.username }}</td>
+                    <td style="color: var(--text-muted);">{{ u.email|default:"No email" }}</td>
+                    <td style="color: var(--text-muted);">{{ u.date_joined|date:"M d, Y H:i" }}</td>
+                    <td>
+                        {% if u.is_superuser %}
+                            <span class="badge" style="background: rgba(245, 158, 11, 0.2); color: var(--accent-warning); border: 1px solid var(--accent-warning);">Superuser</span>
+                        {% elif u.is_staff %}
+                            <span class="badge" style="background: rgba(6, 182, 212, 0.2); color: var(--accent-info); border: 1px solid var(--accent-info);">Staff</span>
+                        {% else %}
+                            <span class="badge" style="background: rgba(148, 163, 184, 0.2); color: var(--text-muted); border: 1px solid var(--glass-border);">User</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if u.is_active %}
+                            <span style="color: var(--accent-success); font-weight: 600;">Active</span>
+                        {% else %}
+                            <span style="color: var(--accent-danger); font-weight: 600;">Disabled</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- All System Expenses Section -->
+<div class="glass-card">
+    <h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 1.25rem;">
+        <i class="fas fa-database" style="color: var(--accent-primary); margin-right: 8px;"></i> System Expenses Across All Users
+    </h3>
+    <div class="table-container">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Title</th>
+                    <th>Category</th>
+                    <th>Date</th>
+                    <th>Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for exp in all_expenses %}
+                <tr>
+                    <td style="font-weight: 600; color: var(--accent-info);">{{ exp.user.username }}</td>
+                    <td style="color: #fff;">{{ exp.title }}</td>
+                    <td>
+                        {% if exp.category %}
+                            <i class="{{ exp.category.icon|default:'fas fa-tag' }}" style="color: var(--accent-info); margin-right: 6px;"></i>
+                            {{ exp.category.name }}
+                        {% else %}
+                            Uncategorized
+                        {% endif %}
+                    </td>
+                    <td style="color: var(--text-muted);">{{ exp.date|date:"M d, Y" }}</td>
+                    <td style="font-weight: 700; color: var(--accent-danger);">₹{{ exp.amount|floatformat:2 }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No system expenses recorded yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block title %}Expense Details - {{ expense.title }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Expense Details</h1>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">View record information</p>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <a href="{% url 'expense_edit' expense.id %}" class="btn btn-secondary">
+            <i class="fas fa-edit"></i> Edit
+        </a>
+        <a href="{% url 'expense_delete' expense.id %}" class="btn btn-danger">
+            <i class="fas fa-trash"></i> Delete
+        </a>
+    </div>
+</div>
+
+<div class="glass-card" style="max-width: 600px;">
+    <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--glass-border); padding-bottom: 1rem; margin-bottom: 1.5rem;">
+        <h2 style="font-size: 1.5rem; font-weight: 700;">{{ expense.title }}</h2>
+        <div style="font-size: 1.8rem; font-weight: 700; color: var(--accent-danger);">
+            ₹{{ expense.amount|floatformat:2 }}
+        </div>
+
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+        <div>
+            <div style="font-size: 0.85rem; color: var(--text-muted);">Category</div>
+            <div style="font-weight: 600; font-size: 1.1rem; margin-top: 4px;">
+                {% if expense.category %}
+                    <i class="{{ expense.category.icon|default:'fas fa-tag' }}" style="color: var(--accent-info); margin-right: 6px;"></i>
+                    {{ expense.category.name }}
+                {% else %}
+                    Uncategorized
+                {% endif %}
+            </div>
+        </div>
+
+        <div>
+            <div style="font-size: 0.85rem; color: var(--text-muted);">Transaction Date</div>
+            <div style="font-weight: 600; font-size: 1.1rem; margin-top: 4px;">
+                <i class="fas fa-calendar-alt" style="color: var(--accent-warning); margin-right: 6px;"></i>
+                {{ expense.date|date:"F d, Y" }}
+            </div>
+        </div>
+    </div>
+
+    <div style="margin-bottom: 1.5rem;">
+        <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px;">Description</div>
+        <div style="background: rgba(15, 23, 42, 0.5); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: 1rem; font-size: 0.95rem; min-height: 80px;">
+            {{ expense.description|default:"No description provided." }}
+        </div>
+    </div>
+
+    <div style="font-size: 0.8rem; color: var(--text-muted); border-top: 1px solid var(--glass-border); padding-top: 1rem; display: flex; justify-content: space-between;">
+        <span>Created: {{ expense.created_at|date:"M d, Y H:i" }}</span>
+        <span>Last Updated: {{ expense.updated_at|date:"M d, Y H:i" }}</span>
+    </div>
+
+    <div style="margin-top: 1.5rem;">
+        <a href="{% url 'expenses' %}" class="btn btn-secondary">← Back to Expenses</a>
+    </div>
+</div>
+{% endblock %}

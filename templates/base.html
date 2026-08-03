@@ -1,0 +1,115 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Expense Tracker{% endblock %}</title>
+    <!-- FontAwesome icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    {% if user.is_authenticated %}
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div>
+                <a href="{% url 'dashboard' %}" class="brand">
+                    <i class="fas fa-wallet"></i>
+                    <span>Expenza</span>
+                </a>
+                <ul class="nav-links">
+                    <li>
+                        <a href="{% url 'dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                            <i class="fas fa-chart-pie"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'expenses' %}" class="nav-link {% if request.resolver_match.url_name == 'expenses' %}active{% endif %}">
+                            <i class="fas fa-receipt"></i>
+                            <span>Expenses</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'expense_add' %}" class="nav-link {% if request.resolver_match.url_name == 'expense_add' %}active{% endif %}">
+                            <i class="fas fa-plus-circle"></i>
+                            <span>Add Expense</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'income_add' %}" class="nav-link {% if request.resolver_match.url_name == 'income_add' %}active{% endif %}">
+                            <i class="fas fa-hand-holding-usd"></i>
+                            <span>Add Income</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'reports' %}" class="nav-link {% if request.resolver_match.url_name == 'reports' %}active{% endif %}">
+                            <i class="fas fa-file-invoice-dollar"></i>
+                            <span>Reports</span>
+                        </a>
+                    </li>
+                    {% if user.is_staff %}
+                    <li style="margin-top: 1rem; border-top: 1px solid var(--glass-border); padding-top: 0.5rem;">
+                        <a href="{% url 'admin_dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}" style="color: var(--accent-warning);">
+                            <i class="fas fa-user-shield"></i>
+                            <span>Admin Panel</span>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                </ul>
+            </div>
+
+            <div class="user-profile">
+                <div class="user-info">
+                    <div class="avatar">{{ user.username|slice:":1"|upper }}</div>
+                    <div>
+                        <div style="font-weight: 600; font-size: 0.9rem; color: #fff;">{{ user.first_name|default:user.username }}</div>
+                        <a href="{% url 'change_password' %}" style="font-size: 0.75rem; color: var(--text-muted); text-decoration: none;">Change Password</a>
+                    </div>
+                </div>
+                <a href="{% url 'logout' %}" title="Logout" style="color: var(--accent-danger); font-size: 1.1rem;">
+                    <i class="fas fa-sign-out-alt"></i>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">
+                        <i class="fas {% if message.tags == 'success' %}fa-check-circle{% elif message.tags == 'error' %}fa-exclamation-circle{% else %}fa-info-circle{% endif %}"></i>
+                        <span>{{ message }}</span>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+    {% else %}
+    <div class="auth-wrapper">
+        <div class="auth-card glass-card">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">
+                        <i class="fas {% if message.tags == 'success' %}fa-check-circle{% elif message.tags == 'error' %}fa-exclamation-circle{% else %}fa-info-circle{% endif %}"></i>
+                        <span>{{ message }}</span>
+                    </div>
+                {% endfor %}
+            {% endif %}
+            {% block auth_content %}{% endblock %}
+        </div>
+    </div>
+    {% endif %}
+
+    <script src="{% static 'js/main.js' %}"></script>
+    <script src="{% static 'js/charts.js' %}"></script>
+</body>
+</html>

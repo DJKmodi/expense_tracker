@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% load socialaccount %}
+
+{% block title %}Register - Expense Tracker{% endblock %}
+
+{% block auth_content %}
+<div class="auth-header">
+    <a href="#" class="brand" style="justify-content: center; margin-bottom: 1rem;">
+        <i class="fas fa-wallet"></i>
+        <span>Expenza</span>
+    </a>
+    <h2>Create Account</h2>
+    <p style="color: var(--text-muted); font-size: 0.9rem;">Start tracking your finances effortlessly</p>
+</div>
+
+<!-- Social Auth Options -->
+<div class="social-auth-group">
+    <a href="{% provider_login_url 'google' %}" class="btn-social btn-google">
+        <i class="fab fa-google" style="color: #ea4335;"></i> Sign up with Google
+    </a>
+    <a href="{% provider_login_url 'github' %}" class="btn-social btn-github">
+        <i class="fab fa-github"></i> Sign up with GitHub
+    </a>
+</div>
+
+<div class="divider-text">
+    <span>OR REGISTER WITH EMAIL</span>
+</div>
+
+<form method="post" action="{% url 'register' %}">
+    {% csrf_token %}
+    {% for field in form %}
+    <div class="form-group">
+        <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {% if field.errors %}
+            <div style="color: var(--accent-danger); font-size: 0.8rem; margin-top: 4px;">
+                {{ field.errors.0 }}
+            </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+
+    <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; margin-top: 1rem;">
+        <i class="fas fa-user-plus"></i> Register
+    </button>
+</form>
+
+<div style="text-align: center; margin-top: 1.5rem; font-size: 0.9rem; color: var(--text-muted);">
+    Already have an account? <a href="{% url 'login' %}" style="color: var(--accent-primary); text-decoration: none; font-weight: 600;">Sign In</a>
+</div>
+{% endblock %}

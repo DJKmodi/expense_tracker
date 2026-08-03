@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+
+{% block title %}Reports & Analytics - Expense Tracker{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Reports & Analytics</h1>
+        <p style="color: var(--text-muted); font-size: 0.95rem;">Comprehensive financial breakdown and spending visualizer</p>
+    </div>
+    <a href="{% url 'download_report_pdf' %}" class="btn btn-primary">
+        <i class="fas fa-file-pdf"></i> Download PDF Report
+    </a>
+</div>
+
+
+<!-- Highlight Cards -->
+<div class="dashboard-grid" style="grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));">
+    <!-- Income vs Expense -->
+    <div class="glass-card metric-card">
+        <div class="metric-icon balance">
+            <i class="fas fa-scale-balanced"></i>
+        </div>
+        <div class="metric-details">
+            <div class="label">Income vs Expense</div>
+            <div class="value" style="font-size: 1.25rem;">
+                <span style="color: var(--accent-success);">₹{{ total_income|floatformat:0 }}</span> / 
+                <span style="color: var(--accent-danger);">₹{{ total_expense|floatformat:0 }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Highest Expense -->
+    <div class="glass-card metric-card">
+        <div class="metric-icon expense">
+            <i class="fas fa-fire"></i>
+        </div>
+        <div class="metric-details">
+            <div class="label">Highest Expense</div>
+            {% if highest_expense %}
+                <div class="value" style="color: var(--accent-danger); font-size: 1.3rem;">
+                    ₹{{ highest_expense.amount|floatformat:2 }}
+                </div>
+                <div style="font-size: 0.85rem; color: var(--text-muted);">{{ highest_expense.title|truncatechars:20 }}</div>
+            {% else %}
+                <div class="value" style="font-size: 1.1rem; color: var(--text-muted);">No expenses</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Charts Grid -->
+<div class="charts-grid" style="grid-template-columns: 1fr 1fr; margin-bottom: 2rem;">
+    <!-- Bar Chart: Monthly Expenses vs Income -->
+    <div class="glass-card">
+        <div class="chart-title">
+            <span><i class="fas fa-chart-bar" style="color: var(--accent-success); margin-right: 8px;"></i> Monthly Income vs Expense</span>
+        </div>
+        <div style="position: relative; height: 300px;">
+            <canvas id="monthlyBarChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Pie Chart: Expenses by Category -->
+    <div class="glass-card">
+        <div class="chart-title">
+            <span><i class="fas fa-chart-pie" style="color: var(--accent-warning); margin-right: 8px;"></i> Expenses by Category</span>
+        </div>
+        <div style="position: relative; height: 300px;">
+            <canvas id="categoryPieChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Full Line Chart: Expense Trend -->
+<div class="glass-card" style="margin-bottom: 2rem;">
+    <div class="chart-title">
+        <span><i class="fas fa-chart-line" style="color: var(--accent-primary); margin-right: 8px;"></i> 6-Month Expense Trend</span>
+    </div>
+    <div style="position: relative; height: 320px;">
+        <canvas id="expenseLineChart"></canvas>
+    </div>
+</div>
+
+<!-- Category & Monthly Data Tables -->
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+    <!-- Category Breakdown Table -->
+    <div class="glass-card">
+        <h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem;">
+            <i class="fas fa-tags" style="color: var(--accent-info); margin-right: 8px;"></i> Category Breakdown
+        </h3>
+        <div class="table-container">
+            <table class="custom-table">
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th>Total Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cat in category_expenses %}
+                    <tr>
+                        <td style="font-weight: 600;">
+                            <i class="{{ cat.category__icon|default:'fas fa-tag' }}" style="color: var(--accent-info); margin-right: 8px;"></i>
+                            {{ cat.category__name|default:"Uncategorized" }}
+                        </td>
+                        <td style="font-weight: 700; color: var(--accent-danger);">₹{{ cat.total|floatformat:2 }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="2" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No category data available</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Monthly Summary Table -->
+    <div class="glass-card">
+        <h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem;">
+            <i class="fas fa-calendar-alt" style="color: var(--accent-primary); margin-right: 8px;"></i> Monthly History
+        </h3>
+        <div class="table-container">
+            <table class="custom-table">
+                <thead>
+                    <tr>
+                        <th>Month</th>
+                        <th>Income</th>
+                        <th>Expense</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for m in monthly_data %}
+                    <tr>
+                        <td style="font-weight: 600;">{{ m.month }}</td>
+                        <td style="color: var(--accent-success); font-weight: 600;">+₹{{ m.income|floatformat:2 }}</td>
+                        <td style="color: var(--accent-danger); font-weight: 600;">-₹{{ m.expense|floatformat:2 }}</td>
+                    </tr>
+
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
